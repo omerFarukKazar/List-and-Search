@@ -22,11 +22,11 @@ final class DBManager {
     private var managedContext: NSManagedObjectContext {
         appDelegate.persistentContainer.viewContext
     }
+    // Since appDelegate and managedContext are used in more than one functions, unwrapped and shortened them as computed properties.
     
     // MARK: - CRUD Operations
     //Create
     func create(entityName: String, values: [String : Any], completion: (NSManagedObject?, Error?) -> Void) {
-        let managedContext = appDelegate.persistentContainer.viewContext
         let entity = NSEntityDescription.entity(forEntityName: entityName,
                                                 in: managedContext)
         let object = NSManagedObject(entity: entity!, insertInto: managedContext)
