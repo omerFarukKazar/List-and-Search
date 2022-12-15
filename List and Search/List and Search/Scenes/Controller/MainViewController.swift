@@ -43,6 +43,7 @@ final class MainViewController: UIViewController {
         let alertController = UIAlertController(title: "Warning", message: "Are you sure you want to remove all the items in the list?", preferredStyle: .alert)
         
         let confirmButton = UIAlertAction(title: "Remove all", style: .default) { _ in
+            self.removeAll(objects: self.items)
             self.items.removeAll()
             self.listTableView.reloadData()
         }
@@ -110,6 +111,7 @@ final class MainViewController: UIViewController {
     /// - Parameter indexPath: The IndexPath of the element which wanted to delete.
     private func remove(at indexPath: IndexPath) {
         // Silme işlemini obje üzerinden gerçekleştirdik ancak UUID üzerinden gerçekleştirmek belki daha efektif olabilirdi ?
+        // TODO: Refactor'de bak
         if isFiltering {
             let object = filteredItems[indexPath.row]
             DBManager.shared.delete(entityName: "ListItem", object: object, completion: { error in
@@ -134,14 +136,21 @@ final class MainViewController: UIViewController {
             })
             items.remove(at: indexPath.row)
             listTableView.deleteRows(at: [indexPath], with: .fade)
+            // items'in didSet'inde listTableView.reloadData() fonksiyonunu da kullanabilirdik ancak                                     listTableView.deleteRows(at: [indexPath], with: .fade) kullanıp row'u deleteRows fonksiyonu çağırarak silmemiz daha sağlıklı bu sayede tüm tableview yeniden yüklenmez. Bu tableview elemanları basit olduğu ( text'ten ibaret, içerisinde birden çok kompleks view element barındırmıyor ) için, çok fazla tableview elemanı olmayacağı için ve API bağlantısı olmadığı için didSet'te tableView.reloadData() fonksiyonu ile handle etmek performans açısından sorun olmaz ancak diğer türlü büyük problem yaratırdı.
+            
+            // NOTE: - The reloadSections:withRowAnimation: and reloadRowsAtIndexPaths:withRowAnimation: methods, which were introduced in iOS 3.0, allow you to request the table view to reload the data for specific sections and rows instead of loading the entire visible table view by calling reloadData.
+            
+            // Kaynak: https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/TableView_iPhone/ManageInsertDeleteRow/ManageInsertDeleteRow.html#//apple_ref/doc/uid/TP40007451-CH10-SW9
+            
+            // https://developer.apple.com/documentation/uikit/views_and_controls/table_views#//apple_ref/doc/uid/TP40007451
         }
-        // items'in didSet'inde listTableView.reloadData() fonksiyonunu da kullanabilirdik ancak                                     listTableView.deleteRows(at: [indexPath], with: .fade) kullanıp row'u deleteRows fonksiyonu çağırarak silmemiz daha sağlıklı bu sayede tüm tableview yeniden yüklenmez. Bu tableview elemanları basit olduğu ( text'ten ibaret, içerisinde birden çok kompleks view element barındırmıyor ) için, çok fazla tableview elemanı olmayacağı için ve API bağlantısı olmadığı için didSet'te tableView.reloadData() fonksiyonu ile handle etmek performans açısından sorun olmaz ancak diğer türlü büyük problem yaratırdı.
-        
-        // NOTE: - The reloadSections:withRowAnimation: and reloadRowsAtIndexPaths:withRowAnimation: methods, which were introduced in iOS 3.0, allow you to request the table view to reload the data for specific sections and rows instead of loading the entire visible table view by calling reloadData.
-        
-        // Kaynak: https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/TableView_iPhone/ManageInsertDeleteRow/ManageInsertDeleteRow.html#//apple_ref/doc/uid/TP40007451-CH10-SW9
-        
-        // https://developer.apple.com/documentation/uikit/views_and_controls/table_views#//apple_ref/doc/uid/TP40007451
+    }
+    private func removeAll(objects: [NSManagedObject]) {
+        DBManager.shared.deleteAll(objects: objects) { error in
+            if let error = error {
+                print(error.localizedDescription)
+            }
+        }
     }
 }
 

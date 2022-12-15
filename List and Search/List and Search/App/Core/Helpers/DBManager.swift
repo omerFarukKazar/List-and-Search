@@ -80,4 +80,19 @@ final class DBManager {
         }
     }
     
+    //DeleteAll
+    func deleteAll(objects: [NSManagedObject], completion: (Error?) -> Void) {
+        for object in objects {
+            managedContext.delete(object)
+        } // Yine objenin tüm özelliklerini karşılaştırmak yerine UUID üzerinden değiştirilebilirdi
+        // TODO: Refactor'de bak
+        do {
+            try managedContext.save()
+            completion(nil)
+        } catch {
+            completion(error)
+        }
+        
+    }
+    
 }
